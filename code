@@ -1,0 +1,455 @@
+const githubProfileSchema = mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  githubUsername: { type: String, required: true, unique: true },
+  githubId: { type: String, required: true, unique: true },
+  profileUrl: String,
+  bio: String,
+  company: String,
+  location: String,
+  blogUrl: String,
+  publicRepos: { type: Number, default: 0 },
+  publicGists: { type: Number, default: 0 },
+  followers: { type: Number, default: 0 },
+  following: { type: Number, default: 0 },
+  totalStarsReceived: { type: Number, default: 0 },
+  totalCommits: { type: Number, default: 0 },
+  accountCreatedAt: Date,
+  lastSyncedAt: { type: Date, default: Date.now }
+});
+
+
+onst mentorProfileSchema = mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  bio: String,
+  headline: String,
+  hourlyRate: { type: Number, default: 0 },
+  yearsOfExperience: Number,
+  
+  // Ratings
+  overallRating: { type: Number, default: 0 },
+  totalSessions: { type: Number, default: 0 },
+  completedSessions: { type: Number, default: 0 },
+  cancelledSessions: { type: Number, default: 0 },
+  
+  clarityRating: { type: Number, default: 0 },
+  patienceRating: { type: Number, default: 0 },
+  responseTimeRating: { type: Number, default: 0 },
+  problemSolvingRating: { type: Number, default: 0 },
+  followupRating: { type: Number, default: 0 },
+  
+  // Availability
+  isAvailable: { type: Boolean, default: true },
+  availableForFreeSession: { type: Boolean, default: false },
+  minSessionDuration: { type: Number, default: 30 },
+  maxSessionDuration: { type: Number, default: 120 },
+  
+  // Success metrics
+  studentSuccessRate: Number,
+  repeatStudentRate: Number,
+  avgResponseTime: Number,
+  
+  // Preferences
+  teachingStyle: [String],
+  studentLevelPreference: [String],
+  
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+
+const contributorProfileSchema = mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  bio: String,
+  interests: [String],
+  currentSkillLevel: { type: String, enum: ['beginner', 'intermediate', 'advanced'] },
+  learningGoals: [String],
+  workingOnRepos: [String],
+  targetCompetitions: [String],
+  preferredSessionDuration: { type: Number, default: 60 },
+  preferredTeachingStyle: [String],
+  budgetPerHour: Number,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const mentorSkillSchema = mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  skillName: { type: String, required: true },
+  proficiencyLevel: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+    required: true
+  },
+  yearsOfExperience: Number,
+  isPrimarySkill: { type: Boolean, default: false },
+  sessionCountForSkill: { type: Number, default: 0 },
+  avgRatingForSkill: { type: Number, default: 0 },
+  lastTaughtAt: Date
+});
+mentorSkillSchema.index({ mentorProfileId: 1, skillName: 1 }, { unique: true });
+
+const mentorExpertiseSchema = mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  expertiseArea: { type: String, required: true }, // 'Frontend', 'Backend', etc.
+  subExpertise: String, // 'React', 'Node.js', etc.
+  proficiencyLevel: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced', 'expert']
+  },
+  sessionCount: { type: Number, default: 0 },
+  avgRating: { type: Number, default: 0 }
+});
+
+mentorExpertiseSchema.index(
+  { mentorProfileId: 1, expertiseArea: 1, subExpertise: 1 }, 
+  { unique: true }
+);
+
+const mentorSpecializationSchema = mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  specializationType: { type: String, required: true }, // 'Debugging', 'Code Review', etc.
+  proficiencyLevel: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced', 'expert']
+  },
+  sessionCount: { type: Number, default: 0 },
+  successRate: { type: Number, default: 0 }
+});
+
+mentorSpecializationSchema.index(
+  { mentorProfileId: 1, specializationType: 1 }, 
+  { unique: true }
+);
+
+const workExperienceSchema = mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  companyName: { type: String, required: true },
+  companyTier: { 
+    type: String, 
+    enum: ['FAANG', 'Unicorn', 'Startup', 'Enterprise', 'OpenSource']
+  },
+  jobTitle: String,
+  startDate: Date,
+  endDate: Date,
+  isCurrent: { type: Boolean, default: false },
+  technologiesUsed: [String],
+  description: String,
+  verificationStatus: { 
+    type: String, 
+    enum: ['verified', 'unverified', 'pending'],
+    default: 'unverified'
+  }
+});
+
+
+mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  competitionName: { type: String, required: true }, // 'GSoC', 'Hacktoberfest', etc.
+  year: { type: Number, required: true },
+  role: { 
+    type: String, 
+    enum: ['mentor', 'participant', 'winner', 'organizer']
+  },
+  organization: String,
+  projectName: String,
+  technologiesUsed: [String],
+  achievementLevel: { 
+    type: String, 
+    enum: ['completed', 'winner', 'finalist', 'participant']
+  },
+  projectUrl: String,
+  isVerified: { type: Boolean, default: false }
+});
+
+const mentorSkillSchema = new mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  skillName: { type: String, required: true },
+  proficiencyLevel: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+    required: true
+  },
+  yearsOfExperience: Number,
+  isPrimarySkill: { type: Boolean, default: false },
+  sessionCountForSkill: { type: Number, default: 0 },
+  avgRatingForSkill: { type: Number, default: 0 },
+  lastTaughtAt: Date
+});
+mentorSkillSchema.index({ mentorProfileId: 1, skillName: 1 }, { unique: true });
+
+const mentorExpertiseSchema = new mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  expertiseArea: { type: String, required: true }, // 'Frontend', 'Backend', etc.
+  subExpertise: String, // 'React', 'Node.js', etc.
+  proficiencyLevel: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced', 'expert']
+  },
+  sessionCount: { type: Number, default: 0 },
+  avgRating: { type: Number, default: 0 }
+});
+
+mentorExpertiseSchema.index(
+  { mentorProfileId: 1, expertiseArea: 1, subExpertise: 1 }, 
+  { unique: true }
+);
+
+const mentorSpecializationSchema = new mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  specializationType: { type: String, required: true }, // 'Debugging', 'Code Review', etc.
+  proficiencyLevel: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced', 'expert']
+  },
+  sessionCount: { type: Number, default: 0 },
+  successRate: { type: Number, default: 0 }
+});
+
+mentorSpecializationSchema.index(
+  { mentorProfileId: 1, specializationType: 1 }, 
+  { unique: true }
+);
+
+const workExperienceSchema = new mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  companyName: { type: String, required: true },
+  companyTier: { 
+    type: String, 
+    enum: ['FAANG', 'Unicorn', 'Startup', 'Enterprise', 'OpenSource']
+  },
+  jobTitle: String,
+  startDate: Date,
+  endDate: Date,
+  isCurrent: { type: Boolean, default: false },
+  technologiesUsed: [String],
+  description: String,
+  verificationStatus: { 
+    type: String, 
+    enum: ['verified', 'unverified', 'pending'],
+    default: 'unverified'
+  }
+});
+
+const sessionSchema = new mongoose.Schema({
+  contributorId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  },
+  mentorId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  },
+  
+  // Session details
+  scheduledDate: { type: Date, required: true },
+  scheduledStartTime: { type: String, required: true }, // "14:00"
+  scheduledEndTime: { type: String, required: true }, // "15:00"
+  actualStartTime: Date,
+  actualEndTime: Date,
+  durationMinutes: Number,
+  
+  // Session context
+  topic: String,
+  description: String,
+  problemType: String, // 'pr_review', 'debugging', 'concept_learning'
+  technologies: [String],
+  difficultyLevel: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced']
+  },
+  
+  // Related to specific repos/competitions
+  relatedRepo: String,
+  relatedCompetition: String,
+  prUrl: String,
+  issueUrl: String,
+  
+  // Session status
+  status: { 
+    type: String, 
+    enum: ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'],
+    default: 'pending'
+  },
+  meetingLink: String,
+  recordingUrl: String,
+  notes: String,
+  
+  // Outcome tracking
+  problemSolved: Boolean,
+  prMerged: Boolean,
+  followUpNeeded: Boolean,
+  followUpSessionId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Session' 
+  },
+  
+  // Pricing
+  agreedRate: Number,
+  actualCost: Number,
+  paymentStatus: { 
+    type: String, 
+    enum: ['pending', 'paid', 'refunded'],
+    default: 'pending'
+  },
+  
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const sessionReviewSchema = new mongoose.Schema({
+  sessionId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Session', 
+    required: true 
+  },
+  reviewerId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  },
+  revieweeId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  },
+  reviewerType: { 
+    type: String, 
+    enum: ['contributor', 'mentor'],
+    required: true
+  },
+  
+  // Overall rating
+  overallRating: { 
+    type: Number, 
+    required: true,
+    min: 1, 
+    max: 5 
+  },
+  
+  // Detailed ratings (for mentor reviews)
+  clarityRating: { type: Number, min: 1, max: 5 },
+  patienceRating: { type: Number, min: 1, max: 5 },
+  responseTimeRating: { type: Number, min: 1, max: 5 },
+  problemSolvingRating: { type: Number, min: 1, max: 5 },
+  followupRating: { type: Number, min: 1, max: 5 },
+  
+  // Review content
+  reviewText: String,
+  pros: [String],
+  cons: [String],
+  
+  // Specific feedback
+  wouldRecommend: Boolean,
+  wouldBookAgain: Boolean,
+  
+  isVerified: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
+
+sessionReviewSchema.index({ sessionId: 1, reviewerId: 1 }, { unique: true });
+
+const searchQuerySchema = new mongoose.Schema({
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User' 
+  },
+  
+  // Search parameters
+  searchText: String,
+  technologies: [String],
+  problemType: String,
+  targetRepo: String,
+  targetCompetition: String,
+  difficultyLevel: String,
+  
+  // Filters applied
+  minRating: Number,
+  maxHourlyRate: Number,
+  requiredBadges: [String],
+  timezonePreference: String,
+  
+  // Results
+  resultsCount: Number,
+  topResultMentorId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User' 
+  },
+  
+  createdAt: { type: Date, default: Date.now }
+});
+
+
+const mentorTestimonialSchema = new mongoose.Schema({
+  mentorProfileId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'MentorProfile', 
+    required: true 
+  },
+  contributorId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User' 
+  },
+  
+  testimonialText: { type: String, required: true },
+  specificAchievement: String,
+  technologiesMentioned: [String],
+  
+  isFeatured: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: true },
+  
+  createdAt: { type: Date, default: Date.now }
+});
+
+
+const openSourceAchievementSchema = new Schema({
+  mentor_profile_id: { type: Schema.Types.ObjectId, ref: 'MentorProfile', required: true },
+  achievement_type: { type: String, enum: ['maintainer', 'core-contributor', 'top-contributor'], required: true },
+  repo_full_name: { type: String, maxlength: 255, required: true },
+  organization_name: { type: String, maxlength: 255 },
+  started_at: { type: Date },
+  ended_at: { type: Date },
+  is_current: { type: Boolean, default: false },
+  contribution_count: { type: Number },
+  impact_score: { type: Number, min: 1, max: 100 },
+  verification_status: { type: String, default: 'unverified', maxlength: 50 },
+}, {
+  timestamps: true // optional, adds createdAt and updatedAt
+});
