@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 
 // ==================== SCHEMAS ====================
@@ -1271,7 +1272,7 @@ async function seedDatabase() {
 
 // ==================== MAIN ====================
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://anuj:anuj@cluster0.7wwcit2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/backlund';
 
 mongoose.connect(MONGODB_URI)
   .then(() => {

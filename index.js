@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 
@@ -1153,7 +1154,7 @@ app.get('/api/testimonials/mentor/:mentorProfileId', async (req, res) => {
 
 // ==================== SERVER START ====================
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://anuj:anuj@cluster0.7wwcit2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/backlund';
 const PORT = process.env.PORT || 3000;
 
 mongoose.connect(MONGODB_URI).then(() => {
